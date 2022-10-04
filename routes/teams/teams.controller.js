@@ -1,5 +1,6 @@
 function getTeams(req, res) {
-  res.status(200).json({ message: 'Testing' })
+  const { userId, role, companyId } = req.credentials;
+  res.status(200).json({ message: "Testing" });
 }
 
-module.exports = { getTeams }
+module.exports = { getTeams };

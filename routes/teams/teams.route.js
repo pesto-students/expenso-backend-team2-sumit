@@ -1,5 +1,5 @@
 const express = require('express')
-const { verifyToken } = require('../../utils/auth')
+const { verifyToken } = require('../../middleware/auth.middleware')
 const { getTeams } = require('./teams.controller')
 
 const TeamsRouter = express.Router()

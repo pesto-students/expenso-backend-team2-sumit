@@ -105,11 +105,66 @@ async function addNewUser() {
   } catch (error) {
     console.log(error);
   }
-
   if (existingUser !== null) {
     return res
       .status(400)
       .json({ ok: false, message: `Email: ${email} is already registered.` });
+  }
+
+  /* Check if team exists */
+  const teamIds = [];
+  for (let i = 0; i < teams.length; i++) {
+    const team = await Team.findOne({ name: teams[i] });
+    if (!team) {
+      return res
+        .status(400)
+        .json({ ok: false, message: `Team: ${teams[i]} does not exist.` });
+    }
+    teamIds.push(team._id);
+  }
+
+  /* If user is team-member, check if team has team-manager and teams-lead in reviewers array of objects*/
+  if (role === "team-member") {
+    for (let i = 0; i < teamIds.length; i++) {
+      const team = await Team.findOne({ _id: teamIds[i] });
+      const { reviewers } = team;
+      const teamManager = reviewers.find(
+        (reviewer) => reviewer.role === "team-manager"
+      );
+      const teamsLead = reviewers.find(
+        (reviewer) => reviewer.role === "teams-lead"
+      );
+      if (!teamManager && !teamsLead) {
+        return res.status(400).json({
+          ok: false,
+          message: `Team: ${teams[i]} does not have team-manager and teams-lead.`,
+        });
+      } else if (!teamManager) {
+        return res.status(400).json({
+          ok: false,
+          message: `Team: ${teams[i]} does not have team-manager.`,
+        });
+      } else if (!teamsLead) {
+        return res.status(400).json({
+          ok: false,
+          message: `Team: ${teams[i]} does not have teams-lead.`,
+        });
+      }
+    }
+  } else if (role === "team-manager") {
+    for (let i = 0; i < teamIds.length; i++) {
+      const team = await Team.findOne({ _id: teamIds[i] });
+      const { reviewers } = team;
+      const teamsLead = reviewers.find(
+        (reviewer) => reviewer.role === "teams-lead"
+      );
+      if (!teamsLead) {
+        return res.status(400).json({
+          ok: false,
+          message: `Team: ${teams[i]} does not have teams-lead.`,
+        });
+      }
+    }
   }
 
   const user = new User({

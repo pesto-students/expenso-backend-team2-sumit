@@ -2,7 +2,7 @@ const express = require("express");
 const {
   getExpense,
   addNewExpense,
-  approveExpense,
+  reviewExpense,
   getRequests,
 } = require("./expense.controller");
 const { verifyToken } = require("../../middleware/auth.middleware");
@@ -10,8 +10,8 @@ const { verifyToken } = require("../../middleware/auth.middleware");
 const ExpenseRouter = express.Router();
 
 ExpenseRouter.get("/", verifyToken, getExpense);
-ExpenseRouter.get("/request", verifyToken, getRequests);
+ExpenseRouter.get("/requests", verifyToken, getRequests);
 ExpenseRouter.post("/new", verifyToken, addNewExpense);
-ExpenseRouter.post("/approve", verifyToken, approveExpense);
+ExpenseRouter.post("/approve", verifyToken, reviewExpense);
 
 module.exports = ExpenseRouter;

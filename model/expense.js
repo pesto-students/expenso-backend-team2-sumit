@@ -7,12 +7,16 @@ const expenseSchema = new Schema({
     type: String,
     required: true,
   },
-  documentURL: {
+  description: {
     type: String,
     required: true,
   },
+  documentURL: {
+    type: String,
+    // required: true, -- change it after integrating S3 bucket
+  },
   requestedBy: {
-    type: Schema.type.ObjectId,
+    type: Schema.Types.ObjectId,
     ref: "User",
     required: true,
   },
@@ -25,21 +29,38 @@ const expenseSchema = new Schema({
     required: true,
     enum: ["submitted", "approved", "rejected", "paid"],
   },
-  reviewers: [
-    {
-      type: Schema.type.ObjectId,
+  reviewers: {
+    managers: [
+      {
+        type: Schema.Types.ObjectId,
+        ref: "User",
+        required: [true, "Team must have at least one manager"],
+        default: [],
+      },
+    ],
+    leads: [
+      {
+        type: Schema.Types.ObjectId,
+        ref: "User",
+        required: [true, "Team must have at least one lead"],
+        default: [],
+      },
+    ],
+    finance: {
+      type: Schema.Types.ObjectId,
       ref: "User",
-      required: true,
+      required: [true, "Team must have at least one finance"],
+      default: [],
     },
-  ],
+  },
   approvedReviewers: [
     {
-      type: Schema.type.ObjectId,
+      type: Schema.Types.ObjectId,
       ref: "User",
     },
   ],
   rejectedReviewer: {
-    type: Schema.type.ObjectId,
+    type: Schema.Types.ObjectId,
     ref: "User",
     default: null,
   },

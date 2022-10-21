@@ -3,7 +3,7 @@ const jwt = require("jsonwebtoken");
 function verifyToken(req, res, next) {
   const { cookie } = req.headers;
   if (!cookie) {
-    return res.status(400).json({ ok: false, message: "Cookie not found" });
+    return res.status(400).json({ message: "Cookie not found" });
   }
   const arr = cookie?.split("; ");
   const cookieObj = {};
@@ -17,7 +17,7 @@ function verifyToken(req, res, next) {
     !cookieObj.role ||
     !cookieObj.companyId
   ) {
-    return res.status(400).json({ ok: false, message: "Cookie not found" });
+    return res.status(400).json({ message: "Cookie not found" });
   }
 
   const { token } = cookieObj;

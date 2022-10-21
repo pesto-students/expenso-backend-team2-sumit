@@ -1,25 +1,28 @@
+const { Team } = require("../../model/team");
 const { User } = require("../../model/user");
+const { Request } = require("../../model/request");
+const { Expense } = require("../../model/expense");
 
 function addNewExpense(req, res) {
   const { userId, role, companyId } = req.credentials;
 
   // Should add documentURL after integrating S3 bucket for image storage.
-  const { name, amount } = req.body;
-
-  const userTeamId = User.findById(userId).teamId;
-
-  const reviewers = [];
+  const { name, description, amount, teamId } = req.body;
+  const teamReviewers = Team.findById(teamId).reviewers; 
+  console.log("teamReviewers: ", teamReviewers);
+  let reviewers = null; 
 
   if (role === "team-member") {
-    const teamLead = User.findOne({ teamId: userTeamId, role: "team-lead" });
-    const finance = User.findOne({ companyId, role: "finance" });
+    reviewers = teamReviewers;
+    // Finance team should also be added
   } else if (role === "team-manager") {
-    const teamLead = User.findOne({ teamId: userTeamId, role: "team-lead" });
-    const finance = User.findOne({ companyId, role: "finance" });
-  } else if (role === "team-lead") {
-    const finance = User.findOne({ companyId, role: "finance" });
+    reviewers.leads = teamReviewers.leads;
+    // Finance team should also be added
+  } else if (role === "teams-lead") {
+    // Finance team should also be added
+  } else if (role === "finance") {
+    // No reviewers
   }
-  // think about finance team as well.
 
   const newExpense = new Expense({
     name,
@@ -36,29 +39,61 @@ function addNewExpense(req, res) {
   newExpense
     .save()
     .then((expense) => {
-      res.status(200).json({ ok: true, expense });
+      return res.status(200).json({ expense });
     })
     .catch((error) => {
-      res.status(400).json({ ok: false, error });
+      return res.status(400).json({ error });
+    });
+
+  // Get the first reviewer from the reviewers object
+  const firstReviewer = null;
+  if (reviewers.managers.length > 0) {
+    firstReviewer = reviewers.managers[0];
+  } else if (reviewers.leads.length > 0) {
+    firstReviewer = reviewers.leads[0];
+  } else if (reviewers.finance.length > 0) {
+    firstReviewer = reviewers.finance[0];
+  }
+  // Should send email to all reviewers
+  // Should add to Request model
+  const newRequest = new Request({
+    reviewerId: firstReviewer,
+    expenseId: newExpense._id.valueOf(),
+    statusOfApproval: "submitted",
+  });
+  newRequest
+    .save()
+    .then((request) => {
+      return res.status(200).json({ request });
+    })
+    .catch((error) => {
+      return res.status(400).json({ error });
     });
 }
 
 function getRequests(req, res) {
   const { userId, role, companyId } = req.credentials;
+  Request.find({ reviewerId: userId })
+    .then((requests) => {
+      res.status(200).json({ requests });
+    })
+    .catch((error) => {
+      res.status(400).json({ error });
+    });
 }
 
 function getExpense(req, res) {
   const { userId, role, companyId } = req.credentials;
   Expense.find({ requestedBy: userId })
     .then((expenses) => {
-      res.status(200).json({ ok: true, expenses });
+      res.status(200).json({ expenses });
     })
     .catch((error) => {
-      res.status(400).json({ ok: false, error });
+      res.status(400).json({ error });
     });
 }
 
-function approveExpense(req, res) {
+function reviewExpense(req, res) {
   const { userId, role, companyId } = req.credentials;
   const { status, expenses } = req.body;
   if (status === "rejected") {
@@ -71,10 +106,10 @@ function approveExpense(req, res) {
         rejectedReviewer: userId,
       })
         .then(() => {
-          res.status(200).json({ ok: true, message: "Expense rejected" });
+          res.status(200).json({ message: "Expense rejected" });
         })
         .catch((error) => {
-          res.status(400).json({ ok: false, error });
+          res.status(400).json({ error });
         });
     });
   } else if (status === "approved") {
@@ -82,30 +117,8 @@ function approveExpense(req, res) {
     expenses.forEach((expenseId) => {
       const currentExpense = Expense.findById(expenseId);
       const { reviewers, approvedReviewers } = currentExpense;
-      if (reviewers.length === approvedReviewers.length + 1) {
-        Expense.findByIdAndUpdate(expenseId, {
-          status: "approved",
-          approvedReviewers: [...approvedReviewers, userId],
-        })
-          .then(() => {
-            res.status(200).json({ ok: true, message: "Expense approved" });
-          })
-          .catch((error) => {
-            res.status(400).json({ ok: false, error });
-          });
-      } else {
-        Expense.findByIdAndUpdate(expenseId, {
-          approvedReviewers: [...approvedReviewers, userId],
-        })
-          .then(() => {
-            res.status(200).json({ ok: true, message: "Expense approved" });
-          })
-          .catch((error) => {
-            res.status(400).json({ ok: false, error });
-          });
-      }
     });
   }
 }
 
-module.exports = { getExpense, addNewExpense, approveExpense, getRequests };
+module.exports = { getExpense, addNewExpense, reviewExpense, getRequests };

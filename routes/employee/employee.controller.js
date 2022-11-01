@@ -117,7 +117,10 @@ async function addNewUser(req, res) {
     numbers: true,
   });
 
+  //TODO: Send mail to user with password. Console.log for now.
+  console.log("email: ", email);
   console.log("password: ", password);
+
   const hashedPassword = bcrypt.hashSync(password);
 
   const user = new User({
@@ -130,9 +133,6 @@ async function addNewUser(req, res) {
     password: hashedPassword,
   });
 
-  // TODO Send mail to user with password. Console.log for now.
-  console.log("email: ", email);
-
   try {
     await user.save();
     console.log(`New user added: ${user}`);
@@ -141,7 +141,7 @@ async function addNewUser(req, res) {
       const team = await Team.findById(createdUser.teams[0]);
       team.reviewers.managers.push(createdUser._id.valueOf());
       await team.save();
-      return res.status(201).json({ message: user.email });
+      return res.status(200).json({ message: user.email });
     } else if (createdUser.role === "teams-lead") {
       for (let i = 0; i < createdUser.teams.length; i++) {
         console.log("createdUser.teams[i]: ", createdUser.teams[i]);
@@ -149,9 +149,9 @@ async function addNewUser(req, res) {
         team.reviewers.leads.push(createdUser._id.valueOf());
         await team.save();
       }
-      return res.status(201).json({ message: user.email });
+      return res.status(200).json({ message: user.email });
     } else {
-      return res.status(201).json({ message: user.email });
+      return res.status(200).json({ message: user.email });
     }
   } catch (error) {
     console.log(error);

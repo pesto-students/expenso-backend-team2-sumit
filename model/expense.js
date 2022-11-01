@@ -29,30 +29,12 @@ const expenseSchema = new Schema({
     required: true,
     enum: ["submitted", "approved", "rejected", "paid"],
   },
-  reviewers: {
-    managers: [
-      {
-        type: Schema.Types.ObjectId,
-        ref: "User",
-        required: [true, "Team must have at least one manager"],
-        default: [],
-      },
-    ],
-    leads: [
-      {
-        type: Schema.Types.ObjectId,
-        ref: "User",
-        required: [true, "Team must have at least one lead"],
-        default: [],
-      },
-    ],
-    finance: {
+  reviewers: [
+    {
       type: Schema.Types.ObjectId,
       ref: "User",
-      required: [true, "Team must have at least one finance"],
-      default: [],
     },
-  },
+  ],
   approvedReviewers: [
     {
       type: Schema.Types.ObjectId,

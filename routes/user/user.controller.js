@@ -13,10 +13,10 @@ async function register(req, res, next) {
 
   const { companyName, companyEmail } = req.body;
   let existingCompany = null;
-  existingCompany = await Company.findOne({ companyEmail });
+  existingCompany = await Company.findOne({ email: companyEmail });
+  console.log("existingCompany", existingCompany);
   if (existingCompany !== null) {
     return res.status(400).json({
-      ok: false,
       message: `Company: ${companyEmail} is already registered.`,
     });
   }
@@ -56,7 +56,7 @@ async function register(req, res, next) {
   try {
     await user.save();
     console.log(`New user added: ${user}`);
-    return res.status(201).json({ email: user.email, companyEmail });
+    return res.status(200).json({ email: user.email, companyEmail });
   } catch (error) {
     console.log(error);
   }
